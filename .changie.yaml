@@ -1,0 +1,32 @@
+changesDir: .changes
+unreleasedDir: unreleased
+headerPath: header.tpl.md
+versionHeaderPath: ""
+versionFooterPath: ""
+changelogPath: CHANGELOG.md
+versionExt: md
+versionFormat: '## {{.Version}} - {{.Time.Format "January 02, 2006"}}'
+kindFormat: '### {{.Kind}}'
+changeFormat: '* {{.Body}} [@{{.Changes.Custom.Author}}](https://github.com/{{.Changes.Custom.Author}})'
+headerFormat: ""
+footerFormat: ""
+kinds:
+- label: Added
+- label: Changed
+- label: Deprecated
+- label: Removed
+- label: Fixed
+- label: Security
+custom:
+- key: Author
+  label: GitHub Username(s) (separated by a single space if multiple)
+  type: string
+  minLength: 3
+- key: Issue
+  label: GitHub Issue Number
+  type: int
+  minLength: 4
+- key: PR
+  label: GitHub Pull Request Number
+  type: int
+  minLength: 4

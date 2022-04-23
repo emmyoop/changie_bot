@@ -1,0 +1,120 @@
+# **what?**
+# Add a changelog yaml file per changie expectation when a bot creates a PR.  The new yaml file 
+# will be created if none already exists on the PR when the PR has a specifed label.  Once created,
+# it will be committed by a specified bot and commit will be pushed to the PR.
+#
+# **why?**
+# Automate changelog generation for more visability with automated bot changes.
+
+# **when?**
+# Once a PR is created and it has been correctly labeled.  
+#
+# An exampe use is for PRs created by dependabot.  You can also manually trigger this by adding the
+# specified label at any time.
+
+name: changie Bot Changelog
+description: Generate a changelog yaml file in a format expected by changie for bot driven PRs.
+
+inputs:
+  bot_PAT:
+    description: Personal Access Token of the bot that will commit the file
+    required: true
+  commit_author: # author expected in the format "Lorem J. Ipsum <lorem@example.com>"
+    description: Author of the commit for the changelog file
+    required: true
+  commit_message:
+    description: Message to put on commit of new changelog file
+    required: false
+    default: "Add automated changelog yaml from template"
+  changie_kind:
+    description: Type of changelog file  # TODO: how does changie define this?
+    required: true
+  label:
+    description: GitHub label to trigger off of
+    required: true
+  custom_changelog_string: # is this the right way?  could it be templated? start here and iterate.
+    description: The multi-line string containg the expected contents of the custom fields for a changelog entry.
+    required: false
+    default: ''  # needed?
+  filename: 
+    description: The name of the file to use as the issue template
+    default: .github/CHANGELOG_TEMPLATE.md
+    required: false
+    
+    
+    
+runs:
+  using: "composite"
+  if: ${{ github.event.label.name == input.label }}
+
+  steps:
+  # timestamp changes the order the changelog entries are listed in the final Changelog.md file.  Precision is not
+  # important here.
+  # The timestamp on the filename and the timestamp in the contents of the file have different expected formats.
+  - name: Get File Name Timestamp
+    id: filename_time
+    uses: nanzm/get-time-action@v1.1
+    with:
+      format: 'YYYYMMDD-HHmmss'
+
+  - name: Get File Content Timestamp
+    id: file_content_time
+    uses: nanzm/get-time-action@v1.1
+    with:
+      format: 'YYYY-MM-DDTHH:mm:ss.000000-05:00'
+
+  # changie expects files to be named in a specific pattern.
+  - name: Generate Filepath
+    id: fp
+    run: |
+      FILEPATH=.changes/unreleased/Dependencies-${{ steps.filename_time.outputs.time }}.yaml
+      echo "::set-output name=FILEPATH::$FILEPATH"
+  - name: Check if changelog file exists already
+    # if there's already a changelog entry, don't add another one!
+    # https://github.com/marketplace/actions/paths-changes-filter
+    # For each filter, it sets output variable named by the filter to the text:
+    #  'true' - if any of changed files matches any of filter rules
+    #  'false' - if none of changed files matches any of filter rules
+    # also, returns:
+    #  `changes` - JSON array with names of all filters matching any of the changed files
+    uses: dorny/paths-filter@v2
+    id: changelog_check
+    with:
+      token: ${{ secrets.GITHUB_TOKEN }}
+      filters: |
+        exists:
+          - added: '.changes/unreleased/**.yaml'
+  - name: Checkout Branch
+    if: steps.changelog_check.outputs.exists == 'false'
+    uses: actions/checkout@v2
+    with:
+      # specifying the ref avoids checking out the repository in a detached state
+      ref: ${{ github.event.pull_request.head.ref }}
+      # If this is not set to false, Git push is performed with github.token and not the token
+      # configured using the env: GITHUB_TOKEN in commit step
+      persist-credentials: false
+
+  - name: Create file from template
+    if: steps.changelog_check.outputs.exists == 'false'
+    run: |
+      echo kind: "${{ inputs.changie_kind }}" > "${{ steps.fp.outputs.FILEPATH }}"
+      echo 'body: "${{ github.event.pull_request.title }}"' >> "${{ steps.fp.outputs.FILEPATH }}"
+      echo time: "${{ steps.file_content_time.outputs.time }}" >> "${{ steps.fp.outputs.FILEPATH }}"
+      echo "${{ inputs.custom_changelog_string }}" >> "${{ steps.fp.outputs.FILEPATH }}"
+  - name: Commit Changelog File
+    if: steps.changelog_check.outputs.exists == 'false'
+    uses: gr2m/create-or-update-pull-request-action@v1
+    env:
+      # When using the GITHUB_TOKEN, the resulting commit will not trigger another GitHub Actions
+      # Workflow run. This is due to limitations set by GitHub.
+      # See: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
+      # When you use the repository's GITHUB_TOKEN to perform tasks on behalf of the GitHub Actions
+      # app, events triggered by the GITHUB_TOKEN will not create a new workflow run. This prevents
+      # you from accidentally creating recursive workflow runs. To get around this, use a Personal
+      # Access Token to commit changes.
+      GITHUB_TOKEN: ${{ inputs.bot_PAT }}  #${{ secrets.FISHTOWN_BOT_PAT }}
+    with:
+      branch: ${{ github.event.pull_request.head.ref }}
+      # author expected in the format "Lorem J. Ipsum <lorem@example.com>"
+      author: ${{ inputs.commit_author }}  #"Github Build Bot <buildbot@fishtownanalytics.com>"
+      commit-message: ${{ inputs.commit_message }}
