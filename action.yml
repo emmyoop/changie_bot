@@ -76,7 +76,7 @@ runs:
     uses: dorny/paths-filter@v2
     id: changelog_check
     with:
-      token: ${{ secrets.GITHUB_TOKEN }}
+      token: ${{ inputs.GITHUB_TOKEN }}
       filters: |
         exists:
           - added: '.changes/unreleased/**.yaml'
