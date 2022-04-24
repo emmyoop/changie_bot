@@ -82,7 +82,7 @@ runs:
           - added: '.changes/unreleased/**.yaml'
 
   - name: Checkout Branch
-    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == input.label
+    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
     uses: actions/checkout@v2
     with:
       # specifying the ref avoids checking out the repository in a detached state
@@ -92,7 +92,7 @@ runs:
       persist-credentials: false
 
   - name: Create file from template
-    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == input.label
+    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
     shell: bash
     run: |
       echo kind: "${{ inputs.changie_kind }}" > "${{ steps.fp.outputs.FILEPATH }}"
@@ -101,7 +101,7 @@ runs:
       echo "${{ inputs.custom_changelog_string }}" >> "${{ steps.fp.outputs.FILEPATH }}"
 
   - name: Commit Changelog File
-    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == input.label
+    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
     uses: gr2m/create-or-update-pull-request-action@v1
     env:
       # When using the GITHUB_TOKEN, the resulting commit will not trigger another GitHub Actions
