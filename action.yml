@@ -40,7 +40,7 @@ inputs:
 
 runs:
   using: "composite"
-  if: ${{ github.event.label.name == input.label }}
+  
 
   steps:
   # timestamp changes the order the changelog entries are listed in the final Changelog.md file.  Precision is not
@@ -61,6 +61,7 @@ runs:
   # changie expects files to be named in a specific pattern.
   - name: Generate Filepath
     id: fp
+    shell: bash
     run: |
       FILEPATH=.changes/unreleased/Dependencies-${{ steps.filename_time.outputs.time }}.yaml
       echo "::set-output name=FILEPATH::$FILEPATH"
@@ -81,7 +82,7 @@ runs:
           - added: '.changes/unreleased/**.yaml'
 
   - name: Checkout Branch
-    if: steps.changelog_check.outputs.exists == 'false'
+    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == input.label
     uses: actions/checkout@v2
     with:
       # specifying the ref avoids checking out the repository in a detached state
@@ -91,7 +92,8 @@ runs:
       persist-credentials: false
 
   - name: Create file from template
-    if: steps.changelog_check.outputs.exists == 'false'
+    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == input.label
+    shell: bash
     run: |
       echo kind: "${{ inputs.changie_kind }}" > "${{ steps.fp.outputs.FILEPATH }}"
       echo 'body: "${{ github.event.pull_request.title }}"' >> "${{ steps.fp.outputs.FILEPATH }}"
@@ -99,7 +101,7 @@ runs:
       echo "${{ inputs.custom_changelog_string }}" >> "${{ steps.fp.outputs.FILEPATH }}"
 
   - name: Commit Changelog File
-    if: steps.changelog_check.outputs.exists == 'false'
+    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == input.label
     uses: gr2m/create-or-update-pull-request-action@v1
     env:
       # When using the GITHUB_TOKEN, the resulting commit will not trigger another GitHub Actions
