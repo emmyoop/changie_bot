@@ -11,6 +11,12 @@
 #
 # An exampe use is for PRs created by dependabot.  You can also manually trigger this by adding the
 # specified label at any time.
+#
+# Assumptions
+#  1. You're using changie
+#  2. Your changelogs live in the default `.changes. path, nothing custom
+#  3. This PR already exists and you just need to add a commit with the changelog to it
+#
 
 name: changie Bot Changelog
 description: Generate a changelog yaml file in a format expected by changie for bot driven PRs.
@@ -35,12 +41,9 @@ inputs:
   custom_changelog_string: # is this the right way?  could it be templated? start here and iterate.
     description: The multi-line string containing the expected contents of the custom fields for a changelog entry.
     required: false
-    default: ''  # needed?
-
 
 runs:
   using: "composite"
-  
 
   steps:
   # timestamp changes the order the changelog entries are listed in the final Changelog.md file.  Precision is not
@@ -59,12 +62,14 @@ runs:
       format: 'YYYY-MM-DDTHH:mm:ss.000000-05:00'
 
   # changie expects files to be named in a specific pattern.
+  # TODO: is this customizable?
   - name: Generate Filepath
     id: fp
     shell: bash
     run: |
       FILEPATH=.changes/unreleased/Dependencies-${{ steps.filename_time.outputs.time }}.yaml
       echo "::set-output name=FILEPATH::$FILEPATH"
+
   - name: Check if changelog file exists already
     # if there's already a changelog entry, don't add another one!
     # https://github.com/marketplace/actions/paths-changes-filter
