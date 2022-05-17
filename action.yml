@@ -25,6 +25,9 @@ inputs:
   bot_PAT:
     description: Personal Access Token of the bot that will commit the file
     required: true
+  GITHUB_TOKEN:
+    description: Personal Access Token of the bot that will commit the file
+    required: true
   commit_author: # author expected in the format "Lorem J. Ipsum <lorem@example.com>"
     description: Author of the commit for the changelog file
     required: true
