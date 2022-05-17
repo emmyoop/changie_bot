@@ -62,8 +62,8 @@ runs:
     shell: bash
     id: timestamp
     run: |
-      echo "::set-output name=filename_time::date +'%Y%m%d-%H%M%S'"
-      echo "::set-output name=file_content_time::date +'%Y-%m-%dT%H:%M:%S.00000Z'"
+      echo "::set-output name=filename_time::date +%Y%m%d-%H%M%S"
+      echo "::set-output name=file_content_time::date +%Y-%m-%dT%H:%M:%S.00000Z"
 
   # changie expects files to be named in a specific pattern.
   # TODO: is this customizable?
