@@ -1,7 +1,7 @@
 # changie_bot_autogenerate
 
 ### Description
-When using [changie](https://changie.dev/) to generate your changelog, it is useful to be able to autogenerate a changelog file in the format expected by changie when a bot creates a PR.  This action creates a new yaml file, commit it with a specified bot and then the commit will be pushed to the PR.
+When using [changie](https://changie.dev/) to generate your changelog, it is useful to be able to autogenerate a changelog file in the format expected by changie when a bot creates a PR.  This action checks out the branch for the PR, creates a new changie yaml file, commits it and then pushes it to the PR.
 
 A common use is PRs created by dependabot.
 
@@ -35,3 +35,36 @@ An exampe use is for PRs created by dependabot.  You can also manually trigger t
 3. This action is called in the context of a PR
 4. Not changelog yaml file already exists on this PR
 5. This PR already exists and you just need to add a commit with the changelog to it
+
+### Example
+
+```yaml
+name: Changie Bot Action
+
+on:
+  pull_request:
+    # catch when the PR is opened with the label or when the label is added
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  dependency_changelog:
+    runs-on: ubuntu-latest
+    name: a job to add a changelog yaml file to bot PRs
+
+    steps:
+    
+    - name: Create Changelog Commit on PR
+      id: filename_time
+      uses: emmyoop/changie_bot_autogenerate@main
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # could be a PAT too
+        commit_author: "emmyoop bot <emilyhayne@gmail.com>"
+        commit_message: "My custom commit message"
+        changie_kind: "Bug"
+        label: "my_custom"
+        custom_changelog_string: "custom:\n  Field 1: Some String\n  Field 2: 1\n  Field 3: a\n"
+```
