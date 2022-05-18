@@ -15,8 +15,9 @@
 # Assumptions
 #  1. You're using changie
 #  2. Your changelogs live in the default `.changes. path, nothing custom
-#  3. Not changelog yaml file already exists on this PR
-#  4. This PR already exists and you just need to add a commit with the changelog to it
+#  3. This action is called in the context of a PR
+#  4. Not changelog yaml file already exists on this PR
+#  5. This PR already exists and you just need to add a commit with the changelog to it
 #
 # A note on tokens:
 # When using the GITHUB_TOKEN, the resulting commit will not trigger another GitHub Actions
