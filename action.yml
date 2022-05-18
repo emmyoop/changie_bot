@@ -28,7 +28,7 @@
 # you from accidentally creating recursive workflow runs. To get around this, use a Personal
 # Access Token to commit changes.
 
-name: changie Bot Changelog
+name: Automated Changelog Generation for changie
 description: Generate a changelog yaml file in a format expected by changie for bot driven PRs.
 
 inputs:
