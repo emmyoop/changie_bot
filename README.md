@@ -1,4 +1,4 @@
-# changie_bot_autogenerate
+# changie_bot
 
 ### Description
 When using [changie](https://changie.dev/) to generate your changelog, it is useful to be able to autogenerate a changelog file in the format expected by changie when a bot creates a PR.  This action checks out the branch for the PR, creates a new changie yaml file, commits it and then pushes it to the PR.
