@@ -59,7 +59,7 @@ jobs:
     
     - name: Create Changelog Commit on PR
       id: filename_time
-      uses: emmyoop/changie_bot_autogenerate@main
+      uses: emmyoop/changie_bote@v0.1
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # could be a PAT too
         commit_author: "emmyoop bot <emilyhayne@gmail.com>"
