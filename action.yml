@@ -55,25 +55,6 @@ runs:
   using: "composite"
 
   steps:
-  # timestamp changes the order the changelog entries are listed in the final Changelog.md file.  Precision is not
-  # important here.
-  # The timestamp on the filename and the timestamp in the contents of the file have different expected formats.
-  - name: Set Timestamp
-    shell: bash
-    id: timestamp
-    run: |
-      echo "::set-output name=filename_time::$(date +%Y%m%d-%H%M%S)"
-      echo "::set-output name=file_content_time::$(date +%Y-%m-%dT%H:%M:%S.00000Z)"
-
-  # changie expects files to be named in a specific pattern.
-  # TODO: is this customizable?
-  - name: Generate Filepath
-    id: fp
-    shell: bash
-    run: |
-      FILEPATH=.changes/unreleased/Dependencies-${{ steps.timestamp.outputs.filename_time }}.yaml
-      echo "::set-output name=FILEPATH::$FILEPATH"
-
   - name: Check if changelog file exists already
     # if there's already a changelog entry, don't add another one!
     # https://github.com/marketplace/actions/paths-changes-filter
@@ -102,10 +83,11 @@ runs:
     if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
     shell: bash
     run: |
-      echo kind: "${{ inputs.changie_kind }}" > "${{ steps.fp.outputs.FILEPATH }}"
-      echo 'body: "${{ github.event.pull_request.title }}"' >> "${{ steps.fp.outputs.FILEPATH }}"
-      echo time: "${{ steps.timestamp.outputs.file_content_time }}" >> "${{ steps.fp.outputs.FILEPATH }}"
-      echo "${{ inputs.custom_changelog_string }}" >> "${{ steps.fp.outputs.FILEPATH }}"
+      FILEPATH=.changes/unreleased/Dependencies-$(date +%Y%m%d-%H%M%S).yaml
+      echo kind: "${{ inputs.changie_kind }}" > $FILEPATH
+      echo 'body: "${{ github.event.pull_request.title }}"' >> $FILEPATH
+      echo time: $(date +%Y-%m-%dT%H:%M:%S.00000Z) >> $FILEPATH
+      echo "${{ inputs.custom_changelog_string }}" >> $FILEPATH
 
   - name: Commit Changelog File
     if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
