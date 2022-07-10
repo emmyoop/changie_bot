@@ -1,5 +1,5 @@
 # **what?**
-# Add a changelog yaml file per changie expectation when a bot creates a PR.  The new yaml file 
+# Add a changelog yaml file when a bot creates a PR.  The new yaml file 
 # will be created if none already exists on the PR when the PR has a specifed label.  Once created,
 # it will be committed by a specified bot and commit will be pushed to the PR.
 #
@@ -14,9 +14,9 @@
 #
 # Assumptions
 #  1. You're using changie
-#  2. Your changelogs live in the default `.changes. path, nothing custom
+#  2. Your changelogs live in the default `.changes`. path, nothing custom
 #  3. This action is called in the context of a PR
-#  4. Not changelog yaml file already exists on this PR
+#  4. No changelog yaml file already exists on this PR
 #  5. This PR already exists and you just need to add a commit with the changelog to it
 #
 # A note on tokens:
