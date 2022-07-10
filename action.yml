@@ -100,5 +100,5 @@ runs:
         git config user.email '${{ inputs.commit_author_email }}'
         git pull
         git add .
-        git commit -m ${{ inputs.commit_message }}
+        git commit -m "${{ inputs.commit_message }}"
         git push
