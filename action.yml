@@ -95,6 +95,7 @@ runs:
       if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
       shell: bash
       run: |
+        git status
         git config user.name '${{ inputs.commit_author_name }}'
         git config user.email '${{ inputs.commit_author_email }}'
         git pull
