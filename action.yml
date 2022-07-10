@@ -85,7 +85,7 @@ runs:
       if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
       shell: bash
       run: |
-        FILEPATH=.changes/unreleased/${{ inputes.changie_kind }}-$(date +%Y%m%d-%H%M%S).yaml
+        FILEPATH=.changes/unreleased/${{ inputs.changie_kind }}-$(date +%Y%m%d-%H%M%S).yaml
         echo kind: "${{ inputs.changie_kind }}" > $FILEPATH
         echo 'body: "${{ github.event.pull_request.title }}"' >> $FILEPATH
         echo time: $(date +%Y-%m-%dT%H:%M:%S.00000Z) >> $FILEPATH
