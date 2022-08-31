@@ -60,39 +60,42 @@ runs:
   using: "composite"
 
   steps:
-    - name: Check if changelog file exists already
-      # if there's already a changelog entry, don't add another one!
-      shell: bash
-      id: changelog_check
-      run: |
-        declare RESULT=$(git diff --name-only ${{ github.event.pull_request.head.sha }} ${{ github.event.pull_request.base.sha }})
-        if echo $RESULT | grep '.changes/unreleased/**.yaml'; then
-          echo "::set-output name=exists::true"
-          echo "Changelog already exists for this PR, skip creating a new one"
-        else
-          echo "::set-output name=exists::false"
-        fi
-
     - name: Checkout Branch
-      if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
+      if: ${{ contains(github.event.pull_request.labels.*.name, inputs.label ) }}
       uses: actions/checkout@v3
       with:
         # specifying the ref avoids checking out the repository in a detached state
         ref: ${{ github.event.pull_request.head.ref }}
         token: ${{ inputs.GITHUB_TOKEN }}
 
+    - name: Check if changelog file exists already
+      # if there's already a changelog entry, don't add another one!
+      if: ${{ contains(github.event.pull_request.labels.*.name, inputs.label ) }}
+      shell: bash
+      id: changelog_check
+      run: |
+        declare RESULT=$(git diff --name-only ${{ github.event.pull_request.head.sha }} ${{ github.event.pull_request.base.sha }})
+        echo $RESULT
+        if echo $RESULT | grep '.changes/unreleased/.*.yaml'; then
+          echo "::set-output name=exists::true"
+          echo "Changelog already exists for this PR, skip creating a new one"
+        else
+          echo "::set-output name=exists::false"
+          echo "No changelog exists for this PR, creating a new one"
+        fi
+
     - name: Create file from template
-      if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
+      if: ${{ steps.changelog_check.outputs.exists == 'false'  && contains(github.event.pull_request.labels.*.name, inputs.label ) }}
       shell: bash
       run: |
         FILEPATH=.changes/unreleased/${{ inputs.changie_kind }}-$(date +%Y%m%d-%H%M%S).yaml
-        echo kind: "${{ inputs.changie_kind }}" > $FILEPATH
+        echo 'kind: "${{ inputs.changie_kind }}"' > $FILEPATH
         echo 'body: "${{ github.event.pull_request.title }}"' >> $FILEPATH
-        echo time: $(date +%Y-%m-%dT%H:%M:%S.00000Z) >> $FILEPATH
+        echo 'time: $(date +%Y-%m-%dT%H:%M:%S.00000Z)' >> $FILEPATH
         echo "${{ inputs.custom_changelog_string }}" >> $FILEPATH
 
     - name: Commit & Push changes
-      if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
+      if: ${{ steps.changelog_check.outputs.exists == 'false' && contains(github.event.pull_request.labels.*.name, inputs.label ) }}
       shell: bash
       run: |
         git status
