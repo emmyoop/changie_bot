@@ -74,7 +74,7 @@ runs:
         fi
 
     - name: Checkout Branch
-      if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
+      if: steps.changelog_check.outputs.exists == 'false' && contains( github.event.pull_request.labels.*.name, inputs.label)
       uses: actions/checkout@v3
       with:
         # specifying the ref avoids checking out the repository in a detached state
@@ -82,7 +82,7 @@ runs:
         token: ${{ inputs.GITHUB_TOKEN }}
 
     - name: Create file from template
-      if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
+      if: steps.changelog_check.outputs.exists == 'false' && contains( github.event.pull_request.labels.*.name, inputs.label)
       shell: bash
       run: |
         FILEPATH=.changes/unreleased/${{ inputs.changie_kind }}-$(date +%Y%m%d-%H%M%S).yaml
@@ -92,7 +92,7 @@ runs:
         echo "${{ inputs.custom_changelog_string }}" >> $FILEPATH
 
     - name: Commit & Push changes
-      if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
+      if: steps.changelog_check.outputs.exists == 'false' && contains( github.event.pull_request.labels.*.name, inputs.label)
       shell: bash
       run: |
         git status
