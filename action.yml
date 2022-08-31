@@ -67,6 +67,7 @@ runs:
         # specifying the ref avoids checking out the repository in a detached state
         ref: ${{ github.event.pull_request.head.ref }}
         token: ${{ inputs.GITHUB_TOKEN }}
+        fetch-depth: 0  # fetch all history for all branches
 
     - name: Check if changelog file exists already
       # if there's already a changelog entry, don't add another one!
