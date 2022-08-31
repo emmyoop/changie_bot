@@ -60,17 +60,8 @@ runs:
   using: "composite"
 
   steps:
-    - name: Checkout Branch
-      if: contains( github.event.pull_request.labels.*.name, inputs.label)
-      uses: actions/checkout@v3
-      with:
-        # specifying the ref avoids checking out the repository in a detached state
-        ref: ${{ github.event.pull_request.head.ref }}
-        token: ${{ inputs.GITHUB_TOKEN }}
-
     - name: Check if changelog file exists already
       # if there's already a changelog entry, don't add another one!
-      if: contains( github.event.pull_request.labels.*.name, inputs.label)
       shell: bash
       id: changelog_check
       run: |
@@ -81,6 +72,14 @@ runs:
         else
           echo "::set-output name=exists::false"
         fi
+
+    - name: Checkout Branch
+      if: steps.changelog_check.outputs.exists == 'false' && contains( github.event.pull_request.labels.*.name, inputs.label)
+      uses: actions/checkout@v3
+      with:
+        # specifying the ref avoids checking out the repository in a detached state
+        ref: ${{ github.event.pull_request.head.ref }}
+        token: ${{ inputs.GITHUB_TOKEN }}
 
     - name: Create file from template
       if: steps.changelog_check.outputs.exists == 'false' && contains( github.event.pull_request.labels.*.name, inputs.label)
