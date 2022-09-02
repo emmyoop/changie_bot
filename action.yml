@@ -35,8 +35,11 @@ inputs:
   GITHUB_TOKEN:
     description: Token to use to commit the file.  If you use the GITHUB_TOKEN this commit will not retrigger workflows.  Use a PAT to cause the commit to re-trigger workflows.
     required: true
-  commit_author: # author expected in the format "Lorem J. Ipsum <lorem@example.com>"
-    description: Author of the commit for the changelog file
+  commit_author_name:
+    description: Author name for the commit
+    required: true
+  commit_author_email:
+    description: Author email for the commit
     required: true
   commit_message:
     description: Message to put on commit of new changelog file
@@ -48,7 +51,7 @@ inputs:
   label:
     description: GitHub label to trigger off of
     required: true
-  custom_changelog_string: # is this the right way?  could it be templated? start here and iterate.
+  custom_changelog_string: # use changie commands once available
     description: The multi-line string containing the expected contents of the custom fields for a changelog entry.
     required: false
 
