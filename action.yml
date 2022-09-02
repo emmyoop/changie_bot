@@ -35,8 +35,11 @@ inputs:
   GITHUB_TOKEN:
     description: Token to use to commit the file.  If you use the GITHUB_TOKEN this commit will not retrigger workflows.  Use a PAT to cause the commit to re-trigger workflows.
     required: true
-  commit_author: # author expected in the format "Lorem J. Ipsum <lorem@example.com>"
-    description: Author of the commit for the changelog file
+  commit_author_name:
+    description: Author name for the commit
+    required: true
+  commit_author_email:
+    description: Author email for the commit
     required: true
   commit_message:
     description: Message to put on commit of new changelog file
@@ -48,7 +51,7 @@ inputs:
   label:
     description: GitHub label to trigger off of
     required: true
-  custom_changelog_string: # is this the right way?  could it be templated? start here and iterate.
+  custom_changelog_string: # use changie commands once available
     description: The multi-line string containing the expected contents of the custom fields for a changelog entry.
     required: false
 
@@ -56,47 +59,49 @@ runs:
   using: "composite"
 
   steps:
-  - name: Check if changelog file exists already
-    # if there's already a changelog entry, don't add another one!
-    # https://github.com/marketplace/actions/paths-changes-filter
-    # For each filter, it sets output variable named by the filter to the text:
-    #  'true' - if any of changed files matches any of filter rules
-    #  'false' - if none of changed files matches any of filter rules
-    # also, returns:
-    #  `changes` - JSON array with names of all filters matching any of the changed files
-    uses: dorny/paths-filter@v2
-    id: changelog_check
-    with:
-      token: ${{ inputs.GITHUB_TOKEN }}
-      filters: |
-        exists:
-          - added: '.changes/unreleased/**.yaml'
+    - name: Checkout Branch
+      if: ${{ contains(github.event.pull_request.labels.*.name, inputs.label ) }}
+      uses: actions/checkout@v3
+      with:
+        # specifying the ref avoids checking out the repository in a detached state
+        ref: ${{ github.event.pull_request.head.ref }}
+        token: ${{ inputs.GITHUB_TOKEN }}
 
-  - name: Checkout Branch
-    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
-    uses: actions/checkout@v3
-    with:
-      # specifying the ref avoids checking out the repository in a detached state
-      ref: ${{ github.event.pull_request.head.ref }}
-      token: ${{ inputs.GITHUB_TOKEN }}
+    - name: Check if changelog file exists already
+      # if there's already a changelog entry, don't add another one!
+      if: ${{ contains(github.event.pull_request.labels.*.name, inputs.label ) }}
+      shell: bash
+      id: changelog_check
+      run: |
+        git fetch origin ${{ github.event.pull_request.base.ref }}
+        declare RESULT=$(git diff --name-only ${{ github.event.pull_request.head.sha }} ${{ github.event.pull_request.base.sha }})
+        echo $RESULT
+        if echo $RESULT | grep '.changes/unreleased/.*.yaml'; then
+          echo "::set-output name=exists::true"
+          echo "Changelog already exists for this PR, skip creating a new one"
+        else
+          echo "::set-output name=exists::false"
+          echo "No changelog exists for this PR, creating a new one"
+        fi
 
-  - name: Create file from template
-    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
-    shell: bash
-    run: |
-      FILEPATH=.changes/unreleased/Dependencies-$(date +%Y%m%d-%H%M%S).yaml
-      echo kind: "${{ inputs.changie_kind }}" > $FILEPATH
-      echo 'body: "${{ github.event.pull_request.title }}"' >> $FILEPATH
-      echo time: $(date +%Y-%m-%dT%H:%M:%S.00000Z) >> $FILEPATH
-      echo "${{ inputs.custom_changelog_string }}" >> $FILEPATH
+    - name: Create file from template
+      if: ${{ steps.changelog_check.outputs.exists == 'false'  && contains(github.event.pull_request.labels.*.name, inputs.label ) }}
+      shell: bash
+      run: |
+        FILEPATH=.changes/unreleased/${{ inputs.changie_kind }}-$(date +%Y%m%d-%H%M%S).yaml
+        echo 'kind: "${{ inputs.changie_kind }}"' > $FILEPATH
+        echo 'body: "${{ github.event.pull_request.title }}"' >> $FILEPATH
+        echo 'time: $(date +%Y-%m-%dT%H:%M:%S.00000Z)' >> $FILEPATH
+        echo "${{ inputs.custom_changelog_string }}" >> $FILEPATH
 
-  - name: Commit Changelog File
-    if: steps.changelog_check.outputs.exists == 'false' && github.event.label.name == inputs.label
-    uses: gr2m/create-or-update-pull-request-action@v1
-    env:
-      GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-    with:
-      branch: ${{ github.event.pull_request.head.ref }}
-      # author expected in the format "Lorem J. Ipsum <lorem@example.com>"
-      author: ${{ inputs.commit_author }}
-      commit-message: ${{ inputs.commit_message }}
+    - name: Commit & Push changes
+      if: ${{ steps.changelog_check.outputs.exists == 'false' && contains(github.event.pull_request.labels.*.name, inputs.label ) }}
+      shell: bash
+      run: |
+        git status
+        git config user.name '${{ inputs.commit_author_name }}'
+        git config user.email '${{ inputs.commit_author_email }}'
+        git pull
+        git add .
+        git commit -m "${{ inputs.commit_message }}"
+        git push
