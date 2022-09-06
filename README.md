@@ -16,7 +16,8 @@ An exampe use is for PRs created by dependabot.  You can also manually trigger t
 #### Required inputs
 
 - `GITHUB_TOKEN`: If you expect the resulting commit to add a changelog should retrigger workflows, you will need to use a Personal Access Token for the bot to commit the file.  When using the GITHUB_TOKEN, the resulting commit will not trigger another GitHub Actions Workflow run. This is due to limitations set by GitHub. See [the docs](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow).
-- `commit_author`: Author of the commit for the changelog file. Author expected in the format "Lorem J. Ipsum <lorem@example.com>"
+- `commit_author_name`: Author namw of the commit for the changelog file.
+- `commit_author_email`: Email of the author of the commit for the changelog file.
 - `changie_kind`: Type of changelog file  # TODO: how does changie define this?
 - `label`: GitHub label to trigger off
 
@@ -44,7 +45,7 @@ name: Changie Bot Action
 on:
   pull_request:
     # catch when the PR is opened with the label or when the label is added
-    types: [opened, labeled]
+    types: [labeled]
 
 permissions:
   contents: write
@@ -62,7 +63,8 @@ jobs:
       uses: emmyoop/changie_bote@v0.1
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # could be a PAT too
-        commit_author: "emmyoop bot <emilyhayne@gmail.com>"
+        commit_author_name: "emmyoop bot"
+        commit_author_email: "emilyhayne@gmail.com"
         commit_message: "My custom commit message"
         changie_kind: "Bug"
         label: "my_custom"
