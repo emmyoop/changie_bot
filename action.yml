@@ -77,10 +77,10 @@ runs:
         declare RESULT=$(git diff --name-only ${{ github.event.pull_request.head.sha }} ${{ github.event.pull_request.base.sha }})
         echo $RESULT
         if echo $RESULT | grep '.changes/unreleased/.*.yaml'; then
-          echo "exists::true" >> $GITHUB_OUTPUT
+          echo "exists=true" >> $GITHUB_OUTPUT
           echo "Changelog already exists for this PR, skip creating a new one"
         else
-          echo "exists::false" >> $GITHUB_OUTPUT
+          echo "exists=false" >> $GITHUB_OUTPUT
           echo "No changelog exists for this PR, creating a new one"
         fi
 
