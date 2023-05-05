@@ -97,7 +97,7 @@ runs:
       shell: bash
       # TODO: loop through the json object to make it the format: --custom Author=emmyoop --custom Issue=123
       run: |
-        key_array=($(jq --raw-output 'keys_unsorted | @sh' ${{ steps.custom_fields.outputs.custom }}))
+        key_array=$(${{ steps.custom_fields.outputs.custom }})) | to_entries)
         custom_inputs=""
         for key in "${key_array[@]}"
         do
@@ -109,6 +109,24 @@ runs:
         echo $custom_inputs
 
         echo "custom_inputs=$custom_inputs" >> $GITHUB_OUTPUT
+
+    # - name: Generate custom field string
+    #   id: custom_inputs
+    #   shell: bash
+    #   # TODO: loop through the json object to make it the format: --custom Author=emmyoop --custom Issue=123
+    #   run: |
+    #     key_array=($(jq --raw-output 'keys_unsorted | @sh' ${{ steps.custom_fields.outputs.custom }}))
+    #     custom_inputs=""
+    #     for key in "${key_array[@]}"
+    #     do
+    #       echo "$key"
+    #       key_value="$key=${{ steps.custom_fields.outputs.custom }}.$key"
+    #       custom_inputs="${custom_inputs} $key=key_value"
+    #     done
+
+    #     echo $custom_inputs
+
+    #     echo "custom_inputs=$custom_inputs" >> $GITHUB_OUTPUT
 
     - name: Log changie command
       id: log_command
