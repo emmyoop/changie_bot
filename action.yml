@@ -51,8 +51,8 @@ inputs:
   label:
     description: GitHub label to trigger off of
     required: true
-  custom_changelog_string: # use changie commands once available
-    description: The multi-line string containing the expected contents of the custom fields for a changelog entry.
+  custom_changelog_json: # use changie commands once available
+    description: key value pairs of custom fields
     required: false
 
 runs:
@@ -84,15 +84,18 @@ runs:
           echo "No changelog exists for this PR, creating a new one"
         fi
 
-    - name: Create file from template
-      if: ${{ steps.changelog_check.outputs.exists == 'false'  && contains(github.event.pull_request.labels.*.name, inputs.label ) }}
+    - name: separate custom fields
+      id: custom_fields
       shell: bash
       run: |
-        FILEPATH=.changes/unreleased/${{ inputs.changie_kind }}-$(date +%Y%m%d-%H%M%S).yaml
-        echo 'kind: "${{ inputs.changie_kind }}"' > $FILEPATH
-        echo 'body: "${{ github.event.pull_request.title }}"' >> $FILEPATH
-        echo "time: $(date +%Y-%m-%dT%H:%M:%S.00000Z)" >> $FILEPATH
-        echo "${{ inputs.custom_changelog_string }}" >> $FILEPATH
+        CUSTOM=${{ fromJSON(inputs.custom_changelog_json) }}
+        echo $CUSTOM
+
+    - name: Generate new changelog
+      uses: miniscruff/changie-action@v1
+      with:
+        version: latest
+        args: new --body "${{ github.event.pull_request.title }}" --kind "${{ inputs.changie_kind }}" --custom ${{ steps.custom_fields.outputs.stringified }}
 
     - name: Commit & Push changes
       if: ${{ steps.changelog_check.outputs.exists == 'false' && contains(github.event.pull_request.labels.*.name, inputs.label ) }}

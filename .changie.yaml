@@ -22,3 +22,7 @@ custom:
   label: GitHub Username(s) (separated by a single space if multiple)
   type: string
   minLength: 3
+- key: Issue
+  label: GitHub Issue(s) (separated by a single space if multiple)
+  type: string
+  minLength: 3
