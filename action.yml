@@ -97,7 +97,7 @@ runs:
       shell: bash
       # TODO: loop through the json object to make it the format: --custom Author=emmyoop --custom Issue=123
       run: |
-        key_array=$(${{ steps.custom_fields.outputs.custom }})) | to_entries)
+        key_array=$(${{ steps.custom_fields.outputs.custom }} | to_entries)
         custom_inputs=""
         for key in "${key_array[@]}"
         do
