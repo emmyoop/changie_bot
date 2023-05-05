@@ -89,19 +89,20 @@ runs:
       shell: bash
       run: |
         CUSTOM=${{ fromJSON(inputs.custom_changelog_json) }}
+        echo "custom=$CUSTOM" >> $GITHUB_OUTPUT
         echo $CUSTOM
 
     - name: Log changie command
       id: log_command
       shell: bash
       run: |
-        echo new --body "${{ github.event.pull_request.title }}" --kind "${{ inputs.changie_kind }}" --custom ${{ steps.custom_fields.outputs.stringified }}
+        echo new --body "${{ github.event.pull_request.title }}" --kind "${{ inputs.changie_kind }}" --custom ${{ steps.custom_fields.outputs.custom }}
 
     - name: Generate new changelog
       uses: miniscruff/changie-action@v1
       with:
         version: latest
-        args: new --body "${{ github.event.pull_request.title }}" --kind "${{ inputs.changie_kind }}" --custom ${{ steps.custom_fields.outputs.stringified }}
+        args: new --body "${{ github.event.pull_request.title }}" --kind "${{ inputs.changie_kind }}" --custom ${{ steps.custom_fields.outputs.custom }}
 
     - name: Commit & Push changes
       if: ${{ steps.changelog_check.outputs.exists == 'false' && contains(github.event.pull_request.labels.*.name, inputs.label ) }}
