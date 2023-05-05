@@ -92,17 +92,35 @@ runs:
         echo "custom=$CUSTOM" >> $GITHUB_OUTPUT
         echo $CUSTOM
 
+    - name: Generate custom field string
+      id: custom_inputs
+      shell: bash
+      # TODO: loop through the json object to make it the format: --custom Author=emmyoop --custom Issue=123
+      run: |
+        key_array=($(jq --raw-output 'keys_unsorted | @sh' ${{ steps.custom_fields.outputs.custom }}))
+        custom_inputs=""
+        for key in "${key_array[@]}"
+        do
+          echo "$key"
+          key_value="$key=${{ steps.custom_fields.outputs.custom }}.$key"
+          custom_inputs="${custom_inputs} $key=key_value"
+        done
+
+        echo $custom_inputs
+
+        echo "custom_inputs=$custom_inputs" >> $GITHUB_OUTPUT
+
     - name: Log changie command
       id: log_command
       shell: bash
       run: |
-        echo new --body "${{ github.event.pull_request.title }}" --kind "${{ inputs.changie_kind }}" --custom ${{ steps.custom_fields.outputs.custom }}
+        echo new --body "${{ github.event.pull_request.title }}" --kind "${{ inputs.changie_kind }}" ${{ steps.custom_inputs.outputs.custom_inputs }}
 
     - name: Generate new changelog
       uses: miniscruff/changie-action@v1
       with:
         version: latest
-        args: new --body "${{ github.event.pull_request.title }}" --kind "${{ inputs.changie_kind }}" --custom ${{ steps.custom_fields.outputs.custom }}
+        args: new --body "${{ github.event.pull_request.title }}" --kind "${{ inputs.changie_kind }}" ${{ steps.custom_inputs.outputs.custom_inputs }}
 
     - name: Commit & Push changes
       if: ${{ steps.changelog_check.outputs.exists == 'false' && contains(github.event.pull_request.labels.*.name, inputs.label ) }}
