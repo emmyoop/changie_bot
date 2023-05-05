@@ -91,6 +91,12 @@ runs:
         CUSTOM=${{ fromJSON(inputs.custom_changelog_json) }}
         echo $CUSTOM
 
+    - name: Log changie command
+      id: log_command
+      shell: bash
+      run: |
+        echo new --body "${{ github.event.pull_request.title }}" --kind "${{ inputs.changie_kind }}" --custom ${{ steps.custom_fields.outputs.stringified }}
+
     - name: Generate new changelog
       uses: miniscruff/changie-action@v1
       with:
